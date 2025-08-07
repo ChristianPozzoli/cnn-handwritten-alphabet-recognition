@@ -1,0 +1,4 @@
+.ipynb_checkpoints
+*.keras
+A_Z_Handwritten_Data.csv
+plots/
