@@ -28,10 +28,12 @@
 \lstset{
 language=Python,
 basicstyle=\fontfamily{pcr}\footnotesize,
-comment=[l]{//},
+comment=[l]{\#},
 commentstyle=\color{OliveGreen}\ttfamily,
 keywordstyle=\color{NavyBlue}\bfseries,
-ndkeywordstyle=\bfseries
+numberstyle=\tiny\color{Gray},
+ndkeywordstyle=\bfseries,
+numbers=left
 }
 \maketitle
 \renewcommand*\contentsname{Indice}
@@ -56,7 +58,7 @@ Le librerie NumPy e Pandas sono impiegate per la gestione e l'elaborazione effic
 La libreria OpenCV è utilizzata per il pre-processamento e la manipolazione delle immagini, operazioni fondamentali per l'addestramento.
 La costruzione e l'addestramento della rete neurale sono realizzati con TensorFlow e Keras come framework principali. Infine, Tkinter permette lo sviluppo di un'interfaccia grafica semplice, attraverso cui l'utente può disegnare un carattere e sottoporlo direttamente al modello per il riconoscimento.
 
-\section{Reti neurali convoluzionali}
+\section{Reti neurali convoluzionali}\label{cnn}
 Con l'obiettivo di sviluppare un agente capace di riconoscere caratteri scritti, ci si confronta con il problema dell'elaborazione di immagini, in quanto il dato da classificare si presenta come una matrice di pixel (in questo caso in scala di grigi).
 Una tipologia di rete neurale particolarmente adatta a riconoscere elementi a partire da una rappresentazione visiva è la rete neurale convoluzionale (CNN), la cui architettura si ispira alla corteccia visiva degli animali in cui i neuroni sono organizzati in modo da rispondere a regioni parzialmente sovrapposte che compongono l'intero campo visivo.
 Nel mondo biologico, il modo in cui i neuroni reagiscono e si dispongono lungo il campo visivo corrisponde, in termini matematici, all'operazione di convoluzione.
@@ -94,7 +96,7 @@ Come prima operazione è utile aggiungere una colonna iniziale che rappresenti i
 \end{itemize}
 Pertanto, si randomizza prima l'ordine delle righe e successivamente si separano gli indici e le etichette dal dataset vero e proprio.
 Oltre a questa suddivisione in colonne, la fase di addestramento richiede anche una suddivisione in righe, con l'obiettivo di ottenere due insiemi di dati: i dati di training, utilizzati per l'addestramento, e i dati di test, utilizzati come controllo sull'andamento dell'errore per evitare overfitting. Una percentuale comune per questo tipo di suddivisione è 80\% di dati training e 20\% dati di test.
-Infine, per la rappresentazione del dato e l'elaborazione da parte della rete, anziché un singolo vettore, è bene disporre i dati secondo una matrice $28\times28$.
+Per la rappresentazione del dato e l'elaborazione da parte della rete, anziché un singolo vettore, è necessario disporre i dati secondo una matrice $28\times28$.
 
 \begin{figure}
     \centering
@@ -103,9 +105,94 @@ Infine, per la rappresentazione del dato e l'elaborazione da parte della rete, a
     \label{some_letters}
 \end{figure}
 
+Infine, l'output della rete sarà una probabilità, o meglio, un vettore in cui è contenuta la probabilità che il carattere da riconoscere sia quello con l'indice corrispondente alla posizione del dato. Questo tipo di rappresentazione è detta one-hot, il vettore contenente l'etichetta della lettera corrispondente sarà quindi trasformato in un vettore dove ogni elemento è un vettore di zeri con valore 1 all'indice dell'etichetta stessa.
+Con i dati organizzati in questo modo è possibile valutare la struttura della rete e le sue componenti.
+
+\begin{lstlisting}[float, language=Python, caption={Codice per la rappresentazione one-hot}]
+train_label_OH = np.zeros(shape=(train_label.shape[0], 26))
+test_label_OH = np.zeros(shape=(test_label.shape[0], 26))
+for idx, n in enumerate(train_label):
+    train_label_OH[idx, int(n)] = 1
+for idx, n in enumerate(test_label):
+    test_label_OH[idx, int(n)] = 1
+\end{lstlisting}
+
 \subsection{Layer}
+Le capacità di una rete neurale dipendono in gran parte dai tipi di livelli che la compongono, così come dal loro ordine e dalla loro interazione.
+Nel caso del riconoscimento di immagini, si utilizza una rete convoluzionale (Convolutional Neural Network, CNN), il cui livello principale è quello di convoluzione.
+Come già accennato nella sezione \ref{cnn} (\nameref{cnn}), la struttura base di una CNN è costituita dall'alternanza di livelli di convoluzione e livelli di pooling.
+Questi livelli rappresentano il fulcro della rete e le conferiscono capacità di "visione", ma non sono sufficienti per costituire una rete completa: i filtri sviluppati estraggono feature dalle immagini, che vengono poi elaborate da livelli completamente connessi, i quali calcolano le probabilità associate ai singoli caratteri.
+Per fare in modo che gli ultimi strati possano elaborare anch'essi le informazioni, è necessario linearizzare l'output dell'ultimo strato di pooling tramite un livello apposito, quindi passare da una rappresentazione matriciale a una vettoriale.
+
+La struttura della rete è quindi la seguente:
+\begin{gather*}
+    \text{Input} \\
+    \downarrow \\
+    \text{Convoluzione} \\
+    \downarrow \\
+    \text{Pooling} \\
+    \downarrow \\
+    \text{Convoluzione} \\
+    \downarrow \\
+    \text{Pooling} \\
+    \downarrow \\
+    \text{Convoluzione} \\
+    \downarrow \\
+    \text{Pooling} \\
+    \downarrow \\
+    \text{Linearizzazione} \\
+    \downarrow \\
+    \text{Totalmente connesso} \\
+    \downarrow \\
+    \text{Totalmente connesso} \\
+    \downarrow \\
+    \text{Totalmente connesso}
+\end{gather*}
+
+Anche intuitivamente è facile dire che un solo livello per tipo non sarebbe abbastanza per permettere alla rete di sviluppare le capacità di riconoscimento richieste. Ogni tipo di livello è, quindi, ripetuto tre volte, con convoluzione e pooling alternati e i livelli finali che elaborano le feature estratte.
+
+\subsubsection{Covoluzione}
+I tre livelli dichiarati nella struttura della rete non sono identici, ma si differenziano per numero di filtri e per ruolo nell'estrazione delle feature, contribuendo in maniera complementare alla capacità di riconoscimento e alla generalizzazione, anche grazie all'azione dei livelli di pooling.
+
+Il primo livello convoluzionale elabora l'input con 32 filtri (kernel) alla piena risoluzione, rilevando pattern locali come bordi, linee e texture semplici.
+Il secondo livello, con 64 filtri, opera su un'immagine a risoluzione ridotta a causa del pooling precedente: ciò consente di rilevare combinazioni di feature e pattern più complessi, riducendo la dipendenza dalla loro posizione esatta nell'immagine.
+Infine, il terzo livello porta il numero di filtri a 128, operando su una rappresentazione ulteriormente ridotta e focalizzandosi su caratteristiche di alto livello, come forme, parti di oggetti o strutture astratte.
+Questa progressione è un principio chiave delle reti convoluzionali, poiché consente di mantenere un bilanciamento tra costo computazionale e capacità di rappresentazione.
+
 \subsubsection{Pooling}
+Come descritto precedentemente, il pooling è un'operazione che aggrega regioni in una regione più piccola ed equivale all'operazione di sottocampionamento. Solitamente le regioni prese in considerazione sono grandi $2 \times 2$ e si spostano sull'immagine con uno stride di 2, in modo da valutare i pixel una volta ciascuno, quindi gli input dimezzano la propria risoluzione a ogni livello di questo tipo.
+
+L'aggregazione delle regioni, però, può avvenire con logiche diverse: i 4 pixel possono essere uniti prendendo il valore massimo (max pool), oppure facendone la media (average pool). I risultati cambiano leggermente in quanto la logica di massimo tende a selezionare più nettamente le feature più evidenti e importanti, mentre la logica di media potrebbe creare delle sfumature più morbide e diffuse che premiano nel riconoscimento di pattern meno netti.
+I due approcci possono anche essere combinati assieme per sfruttare i vantaggi di entrambi: in questo caso risulta più significativo usare un approccio per il primo filtro di pooling e il secondo approccio per i due restanti.
+
+In questo contesto è possibile definire, come è stato fatto, eventuali vantaggi e svantaggi dei singoli approcci, ma non è tanto banale cercare di individuare a livello teorico quale di questi metodi avrà un risultato migliore a livello di accuratezza del modello che si vuole addestrare. È quindi necessario effettuare delle prove empiriche.
+I modelli da comparare sono 4:
+\begin{itemize}
+    \item Modello completamente max pool
+    \item Modello completamente avg pool
+    \item Modello con il primo livello max pool e i restanti avg pool
+    \item Modello con il primo livello avg pool e i restanti max pool
+\end{itemize}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{images/pool_accuracy_comparison.png}
+    \caption{Comparazione di accuratezza dei metodi di pooling}
+    \label{pool_accuracy_comparison}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{images/pool_loss_comparison.png}
+    \caption{Comparazione della loss dei metodi di pooling}
+    \label{pool_loss_comparison}
+\end{figure}
+
+I risultati in figura \ref{pool_accuracy_comparison} mostrano come l'average pool raggiunga un'accuratezza migliore rispetto agli altri metodi 
+
 \subsection{Funzioni di attivazione}
+\subsubsection{ReLU}
+\subsubsection{Softmax}
 \subsection{Ottimizzatori}
 
 \section{Risultato}
