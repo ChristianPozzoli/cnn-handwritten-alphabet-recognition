@@ -5,6 +5,7 @@
 \usepackage{listings}
 \usepackage{amsmath}
 \usepackage{float}
+\usepackage[italian]{babel}
 \usepackage{geometry}
  \geometry{
  a4paper,
@@ -64,10 +65,10 @@ Una tipologia di rete neurale particolarmente adatta a riconoscere elementi a pa
 Nel mondo biologico, il modo in cui i neuroni reagiscono e si dispongono lungo il campo visivo corrisponde, in termini matematici, all'operazione di convoluzione.
 Tale operazione, ampiamente utilizzata anche nella teoria dei segnali, consiste nel calcolare l'integrale del prodotto di due funzioni, dopo averne riflessa una rispetto all'asse $y$ e traslata.
 Nel caso di un'immagine, la convoluzione viene applicata a ciascun pixel come prodotto scalare tra una matrice, chiamata filtro (o kernel), e la porzione dell'immagine su cui essa si sovrappone (nel deep learning si utilizza spesso una variante chiamata cross-correlation, che evita il passaggio di riflessione).
-Questa operazione permette alla rete neurale di estrarre delle feature dall'immagine, in modo da poter riconoscere i contenuti e categorizzare i dati.
+Questa operazione permette alla rete neurale di estrarre delle \textit{feature} dall'immagine, in modo da poter riconoscere i contenuti e categorizzare i dati.
 I filtri rappresentano quindi i pesi di un layer convoluzionale e vengono ottimizzati durante l'addestramento per catturare le caratteristiche più utili al compito.
 Solitamente i layer convoluzionali sono intervallati da dei layer di pooling che riducono la dimensione spaziale dell'immagine, aggregando regioni adiacenti (con, ad esempio, logice di media o di massimo). Questa riduzione abbassa il costo computazionale dei livelli successivi, riduce il rischio di overfitting e aumenta il campo recettivo della rete.
-Nei primi livelli vengono individuate feature locali e specifiche (bordi, texture), mentre con il pooling e la progressione degli strati la rete impara rappresentazioni sempre più astratte e globali, capaci di riconoscere le strutture e i componenti principali del soggetto nell'immagine.
+Nei primi livelli vengono individuate \textit{feature} locali e specifiche (bordi, texture), mentre con il pooling e la progressione degli strati la rete impara rappresentazioni sempre più astratte e globali, capaci di riconoscere le strutture e i componenti principali del soggetto nell'immagine.
 
 \section{Implementazione}
 Conoscendo il concetto di rete neurale convoluzionale, è possibile progettare e realizzare una rete profonda (deep network) capace di svolgere il compito di riconoscimento descritto in precedenza. La costruzione di una rete di questo tipo non si limita alla definizione della sua architettura generale, ma richiede anche una serie di decisioni riguardanti sia la scelta dei parametri e degli iperparametri, sia le modalità di implementazione e ottimizzazione del modello.
@@ -112,16 +113,16 @@ for idx, n in enumerate(test_label):
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\linewidth]{images/some_letters.png}
+    \includegraphics[width=.85\linewidth]{images/some_letters.png}
     \caption{Visualizzazione di alcune lettere}
     \label{some_letters}
 \end{figure}
 
-\subsection{Layer}
+\subsection{Livelli}
 Le capacità di una rete neurale dipendono in gran parte dai tipi di livelli che la compongono, così come dal loro ordine e dalla loro interazione.
 Nel caso del riconoscimento di immagini, si utilizza una rete convoluzionale (Convolutional Neural Network, CNN), il cui livello principale è quello di convoluzione.
 Come già accennato nella sezione \ref{cnn} (\nameref{cnn}), la struttura base di una CNN è costituita dall'alternanza di livelli di convoluzione e livelli di pooling.
-Questi livelli rappresentano il fulcro della rete e le conferiscono capacità di "visione", ma non sono sufficienti per costituire una rete completa: i filtri sviluppati estraggono feature dalle immagini, che vengono poi elaborate da livelli completamente connessi, i quali calcolano le probabilità associate ai singoli caratteri.
+Questi livelli rappresentano il fulcro della rete e le conferiscono capacità di "visione", ma non sono sufficienti per costituire una rete completa: i filtri sviluppati estraggono \textit{feature} dalle immagini, che vengono poi elaborate da livelli completamente connessi, i quali calcolano le probabilità associate ai singoli caratteri.
 Per fare in modo che gli ultimi strati possano elaborare anch'essi le informazioni, è necessario linearizzare l'output dell'ultimo strato di pooling tramite un livello apposito, quindi passare da una rappresentazione matriciale a una vettoriale.
 
 La struttura della rete è quindi la seguente:
@@ -149,20 +150,20 @@ La struttura della rete è quindi la seguente:
     \text{Totalmente connesso}
 \end{gather*}
 
-Anche intuitivamente è facile dire che un solo livello per tipo non sarebbe abbastanza per permettere alla rete di sviluppare le capacità di riconoscimento richieste. Ogni tipo di livello è, quindi, ripetuto tre volte, con convoluzione e pooling alternati e i livelli finali che elaborano le feature estratte.
+Anche intuitivamente è facile dire che un solo livello per tipo non sarebbe abbastanza per permettere alla rete di sviluppare le capacità di riconoscimento richieste. Ogni tipo di livello è, quindi, ripetuto tre volte, con convoluzione e pooling alternati e i livelli finali che elaborano le \textit{feature} estratte.
 
 \subsubsection{Covoluzione}
 I tre livelli dichiarati nella struttura della rete non sono identici, ma si differenziano per numero di filtri e per ruolo nell'estrazione delle feature, contribuendo in maniera complementare alla capacità di riconoscimento e alla generalizzazione, anche grazie all'azione dei livelli di pooling.
 
 Il primo livello convoluzionale elabora l'input con 32 filtri (kernel) alla piena risoluzione, rilevando pattern locali come bordi, linee e texture semplici.
-Il secondo livello, con 64 filtri, opera su un'immagine a risoluzione ridotta a causa del pooling precedente: ciò consente di rilevare combinazioni di feature e pattern più complessi, riducendo la dipendenza dalla loro posizione esatta nell'immagine.
+Il secondo livello, con 64 filtri, opera su un'immagine a risoluzione ridotta a causa del pooling precedente: ciò consente di rilevare combinazioni di \textit{feature} e pattern più complessi, riducendo la dipendenza dalla loro posizione esatta nell'immagine.
 Infine, il terzo livello porta il numero di filtri a 128, operando su una rappresentazione ulteriormente ridotta e focalizzandosi su caratteristiche di alto livello, come forme, parti di oggetti o strutture astratte.
 Questa progressione è un principio chiave delle reti convoluzionali, poiché consente di mantenere un bilanciamento tra costo computazionale e capacità di rappresentazione.
 
 \subsubsection{Pooling}
 Come descritto in precedenza, il pooling è un'operazione che aggrega una regione di pixel in una regione più piccola ed equivale a un'operazione di sottocampionamento. Solitamente le regioni considerate hanno dimensioni $2 \times 2$ e vengono fatte scorrere sull'immagine con stride pari a 2, in modo da valutare ciascun pixel una sola volta. In questo modo, a ogni livello di pooling la risoluzione degli input viene dimezzata.
 
-L'aggregazione delle regioni può avvenire secondo logiche diverse: i 4 pixel possono essere combinati prendendo il valore massimo (max pooling) oppure calcolandone la media (average pooling). I risultati differiscono leggermente: il max pooling tende a enfatizzare le feature più marcate e significative, mentre l'average pooling produce rappresentazioni più morbide e diffuse, utili per il riconoscimento di pattern meno netti.
+L'aggregazione delle regioni può avvenire secondo logiche diverse: i 4 pixel possono essere combinati prendendo il valore massimo (max pooling) oppure calcolandone la media (average pooling). I risultati differiscono leggermente: il max pooling tende a enfatizzare le \textit{feature} più marcate e significative, mentre l'average pooling produce rappresentazioni più morbide e diffuse, utili per il riconoscimento di pattern meno netti.
 I due approcci possono anche essere combinati per sfruttarne i rispettivi vantaggi: in questo caso può risultare utile utilizzare un metodo nel primo livello di pooling e l'altro nei successivi.
 
 In questo contesto è possibile evidenziare vantaggi e svantaggi dei singoli approcci, ma risulta meno immediato stabilire a livello teorico quale dei metodi garantisca le prestazioni migliori in termini di accuratezza del modello. Per questo è necessario procedere con una valutazione empirica.
@@ -176,21 +177,21 @@ I modelli messi a confronto sono quattro:
 
 \begin{figure}
 \centering
-\includegraphics[width=0.8\linewidth]{images/pool_accuracy_comparison.png}
+\includegraphics[width=0.7\linewidth]{images/pool_accuracy_comparison.png}
 \caption{Confronto di accuratezza tra i metodi di pooling}
 \label{pool_accuracy_comparison}
 \end{figure}
 
 \begin{figure}
 \centering
-\includegraphics[width=0.8\linewidth]{images/pool_loss_comparison.png}
+\includegraphics[width=0.7\linewidth]{images/pool_loss_comparison.png}
 \caption{Confronto della loss tra i metodi di pooling}
 \label{pool_loss_comparison}
 \end{figure}
 
 I risultati mostrati in figura \ref{pool_accuracy_comparison} evidenziano come l'average pooling raggiunga un'accuratezza superiore rispetto agli altri metodi, mantenendosi stabile con l'aumentare delle epoche.
 Applicare il max pooling al primo livello e l'average pooling ai successivi porta a prestazioni simili, seppur leggermente inferiori, rispetto all'uso esclusivo dell'average pooling. Si può quindi affermare sperimentalmente che l'average pooling abbia un impatto maggiore nei livelli intermedi e finali della rete.
-Al contrario, un modello basato esclusivamente su max pooling presenta non solo una perdita (loss) più elevata, ma anche una tendenza all'aumento di essa con l'avanzare delle epoche. Questa comparazione permette inoltre di identificare il numero di epoche più adeguato per l'addestramento del modello: si osserva infatti che, oltre la decima epoca, l'accuratezza tende generalmente a diminuire o stabilizzarsi, mentre la loss ad aumentare.
+Al contrario, un modello basato esclusivamente su max pooling presenta non solo una perdita (\textit{loss}) più elevata, ma anche una tendenza all'aumento di essa con l'avanzare delle epoche. Questa comparazione permette inoltre di identificare il numero di epoche più adeguato per l'addestramento del modello: si osserva infatti che, oltre la decima epoca, l'accuratezza tende generalmente a diminuire o stabilizzarsi, mentre la \textit{loss} ad aumentare.
 
 È bene precisare che i risultati ottenuti non sono assoluti e sono influenzati da diversi fattori: dipendono, infatti, oltre che dal dataset utilizzato, da come vengono inizializzati i pesi e da come sono distribuiti i dati di training e testing. Nel caso specifico, quindi, si preferisce utilizzare una CNN con livelli di average pool.
 
@@ -230,20 +231,58 @@ L'uso della funzione esponenziale consente di:
     \item amplificare le differenze tra i valori $x_i$, evitando probabilità troppo simili tra loro ed enfatizzando la classe più probabile, rendendo così la decisione più netta.
 \end{itemize}
 
-\section{Risultato}
-Una rete addestrata come descritto con l'utilizzo di livelli average pool, raggiunge una accuratezza del 99.16096\% nella decima epoca con una loss di 0.04025.
-Sull'intero insieme di test compie 625 errori su 74490 (0.83904 \%) e riesce anche a riconoscere caratteri disegnati dall'utente. Con l'utilizzo del mouse è possibile disegnare un carattere che viene successivamente ridotto a una risoluzione di $28 \times 28$ con un sottocampionamento con interpolazione bilineare e dato in pasto alla rete neurale  per il riconoscimento.
-Considerati il grande numero e la grande varietà di dati con cui è stata addestrata la rete, questa è in grado di riconoscere i caratteri con diversi stili di scrittura e amibguità con un ottimo grado di accuratezza.
+\section{Risultati}
+Una rete addestrata come descritto, utilizzando livelli di \textit{average pooling}, raggiunge un'accuratezza del 99.16096\% alla decima epoca, con una \textit{loss} pari a 0.04025.  
+Sull'intero insieme di test commette 625 errori su 74490 campioni (0.83904\%) ed è inoltre in grado di riconoscere caratteri disegnati direttamente dall'utente. Attraverso l'utilizzo del mouse, è infatti possibile disegnare un carattere che viene successivamente ridimensionato a una risoluzione di $28 \times 28$ tramite sottocampionamento con interpolazione bilineare e fornito come input alla rete neurale per il riconoscimento.
+Grazie all'elevato numero e alla varietà dei dati di addestramento, la rete riesce a riconoscere caratteri scritti con diversi stili, gestendo anche ambiguità con un alto grado di accuratezza.  
+Come si osserva in figura \ref{drawn_letters_predicted}, la rete mantiene buone prestazioni anche su lettere decentrate, ambigue o con tratti aperti e non ben definiti.
 
-\begin{figure}
+\begin{figure}[H]
 \centering
-\includegraphics[width=1\linewidth]{images/drawn_letters_predicted.png}
+\includegraphics[width=.8\linewidth]{images/drawn_letters_predicted.png}
 \caption{Alcune lettere disegnate a mano riconosciute dalla rete neurale}
 \label{drawn_letters_predicted}
 \end{figure}
 
 \subsection{Step intermedi}
 È possibile visualizzare gli step intermedi del riconoscimento effettuato dalla rete, riuscendo a identificare i pattern estratti più importanti e comprendere meglio il "ragionamento" della rete durante il riconoscimento.
+Un caso particolare nella figura \ref{drawn_letters_predicted} è quello delle lettere 8 (C) e 9 (E) che hanno la stessa base a differenza del piccolo tratto orizzontale che distingue la C dalla E. Quel piccolo tratto è sufficiente a distinguere le due lettere, quindi durante l'addestramento la rete è riuscita a definire una buona scelta di estrazione di \textit{feature} per determinare la differenza tra i due caratteri.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1\linewidth]{images/C_full_avgpool_layer_0.png}
+\caption{Risultati dei filtri applicati dal primo layer di convoluzione alla lettera C}
+\label{first_layer_filters_C}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1\linewidth]{images/E_full_avgpool_layer_0.png}
+\caption{Risultati dei filtri applicati dal primo layer di convoluzione alla lettera E}
+\label{first_layer_filters_E}
+\end{figure}
+
+Nelle figure \ref{first_layer_filters_C} e \ref{first_layer_filters_E} è possibile visualizzare i risultati delle applicazioni dei filtri che vengono usati nel primo livello di convoluzione. Come è possibile notare, anche se la differenza tra i due disegni è minima (approssimativamente la differenza è in una regione di $3 \times 3$ pixel), molti filtri estraggono quel tratto orizzontale rendendolo molto visibile e determinante per la scelta del carattere più probabile. Alcuni di questi filtri sono il numero 3, 12, 15 e 23 che evidenziano il tratto in discussione.
+Nei livelli successivi, con l'aumento del numero di filtri, le \textit{feature} vengono ulteriormente elaborate e combinate per raffinare il processo di riconoscimento.  
+Questi risultati intermedi mostrano anche come la rete riesca a individuare pattern orizzontali (es. filtri 3 e 25), verticali (es. 6, 15 e 19) e diagonali (es. 23 e 27), in linea con quanto discusso nei capitoli precedenti. Tali \textit{feature} contribuiscono a scomporre l'informazione visiva in elementi essenziali che, combinati, consentono il riconoscimento del carattere.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.6\linewidth]{images/C_full_avgpool_filters_avg.png}
+\caption{Media dei risultati dei filtri applicati dai layer alla lettera C}
+\label{avg_filters_C}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.6\linewidth]{images/E_full_avgpool_filters_avg.png}
+\caption{Media dei risultati dei filtri applicati dai layer alla lettera E}
+\label{avg_filters_E}
+\end{figure}
+
+Un'ulteriore rappresentazione utile è data dalla media dei risultati dei vari filtri per ogni livello, come si può vedere nelle figure \ref{avg_filters_C} e \ref{avg_filters_E}. I grafici offrono un'idea visiva di come si concentrano i filtri nei vari livelli e di come il pooling agisce sui risultati di convoluzione.
+Soprattutto nei primi livelli è evidente come la rete si focalizzi sui contorni della lettera per determinarne la forma, mentre dopo il secondo layer di convoluzione la visualizzazione perde di significato in quanto i filtri aumentano esponenzalmente di numero e la risoluzione diminuisce, ma è comunque interessante notare come la piccola differenza nel tratto orizzontale negli input porti a una grande differenza nell'ultimo layer.
+È bene ribadire che queste ultime figure non sono pienamente rappresentative, poiché i filtri hanno un significato in quanto pesati individualmente, non come media, tuttavia è comunque un utile strumento di intuizione visiva di come l'informazione viene elaborata lungo la rete.
 
 \subsection{Limiti}
 
