@@ -98,13 +98,6 @@ Pertanto, si randomizza prima l'ordine delle righe e successivamente si separano
 Oltre a questa suddivisione in colonne, la fase di addestramento richiede anche una suddivisione in righe, con l'obiettivo di ottenere due insiemi di dati: i dati di training, utilizzati per l'addestramento, e i dati di test, utilizzati come controllo sull'andamento dell'errore per evitare overfitting. Una percentuale comune per questo tipo di suddivisione è 80\% di dati training e 20\% dati di test.
 Per la rappresentazione del dato e l'elaborazione da parte della rete, anziché un singolo vettore, è necessario disporre i dati secondo una matrice $28\times28$.
 
-\begin{figure}
-    \centering
-    \includegraphics[width=1\linewidth]{images/some_letters.png}
-    \caption{Visualizzazione di alcune lettere}
-    \label{some_letters}
-\end{figure}
-
 Infine, l'output della rete sarà una probabilità, o meglio, un vettore in cui è contenuta la probabilità che il carattere da riconoscere sia quello con l'indice corrispondente alla posizione del dato. Questo tipo di rappresentazione è detta one-hot, il vettore contenente l'etichetta della lettera corrispondente sarà quindi trasformato in un vettore dove ogni elemento è un vettore di zeri con valore 1 all'indice dell'etichetta stessa.
 Con i dati organizzati in questo modo è possibile valutare la struttura della rete e le sue componenti.
 
@@ -116,6 +109,13 @@ for idx, n in enumerate(train_label):
 for idx, n in enumerate(test_label):
     test_label_OH[idx, int(n)] = 1
 \end{lstlisting}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{images/some_letters.png}
+    \caption{Visualizzazione di alcune lettere}
+    \label{some_letters}
+\end{figure}
 
 \subsection{Layer}
 Le capacità di una rete neurale dipendono in gran parte dai tipi di livelli che la compongono, così come dal loro ordine e dalla loro interazione.
@@ -160,45 +160,93 @@ Infine, il terzo livello porta il numero di filtri a 128, operando su una rappre
 Questa progressione è un principio chiave delle reti convoluzionali, poiché consente di mantenere un bilanciamento tra costo computazionale e capacità di rappresentazione.
 
 \subsubsection{Pooling}
-Come descritto precedentemente, il pooling è un'operazione che aggrega regioni in una regione più piccola ed equivale all'operazione di sottocampionamento. Solitamente le regioni prese in considerazione sono grandi $2 \times 2$ e si spostano sull'immagine con uno stride di 2, in modo da valutare i pixel una volta ciascuno, quindi gli input dimezzano la propria risoluzione a ogni livello di questo tipo.
+Come descritto in precedenza, il pooling è un'operazione che aggrega una regione di pixel in una regione più piccola ed equivale a un'operazione di sottocampionamento. Solitamente le regioni considerate hanno dimensioni $2 \times 2$ e vengono fatte scorrere sull'immagine con stride pari a 2, in modo da valutare ciascun pixel una sola volta. In questo modo, a ogni livello di pooling la risoluzione degli input viene dimezzata.
 
-L'aggregazione delle regioni, però, può avvenire con logiche diverse: i 4 pixel possono essere uniti prendendo il valore massimo (max pool), oppure facendone la media (average pool). I risultati cambiano leggermente in quanto la logica di massimo tende a selezionare più nettamente le feature più evidenti e importanti, mentre la logica di media potrebbe creare delle sfumature più morbide e diffuse che premiano nel riconoscimento di pattern meno netti.
-I due approcci possono anche essere combinati assieme per sfruttare i vantaggi di entrambi: in questo caso risulta più significativo usare un approccio per il primo filtro di pooling e il secondo approccio per i due restanti.
+L'aggregazione delle regioni può avvenire secondo logiche diverse: i 4 pixel possono essere combinati prendendo il valore massimo (max pooling) oppure calcolandone la media (average pooling). I risultati differiscono leggermente: il max pooling tende a enfatizzare le feature più marcate e significative, mentre l'average pooling produce rappresentazioni più morbide e diffuse, utili per il riconoscimento di pattern meno netti.
+I due approcci possono anche essere combinati per sfruttarne i rispettivi vantaggi: in questo caso può risultare utile utilizzare un metodo nel primo livello di pooling e l'altro nei successivi.
 
-In questo contesto è possibile definire, come è stato fatto, eventuali vantaggi e svantaggi dei singoli approcci, ma non è tanto banale cercare di individuare a livello teorico quale di questi metodi avrà un risultato migliore a livello di accuratezza del modello che si vuole addestrare. È quindi necessario effettuare delle prove empiriche.
-I modelli da comparare sono 4:
+In questo contesto è possibile evidenziare vantaggi e svantaggi dei singoli approcci, ma risulta meno immediato stabilire a livello teorico quale dei metodi garantisca le prestazioni migliori in termini di accuratezza del modello. Per questo è necessario procedere con una valutazione empirica.
+I modelli messi a confronto sono quattro:
 \begin{itemize}
-    \item Modello completamente max pool
-    \item Modello completamente avg pool
-    \item Modello con il primo livello max pool e i restanti avg pool
-    \item Modello con il primo livello avg pool e i restanti max pool
+\item Modello con solo max pooling
+\item Modello con solo average pooling
+\item Modello con il primo livello di max pooling e i successivi di average pooling
+\item Modello con il primo livello di average pooling e i successivi di max pooling
 \end{itemize}
 
 \begin{figure}
-    \centering
-    \includegraphics[width=0.8\linewidth]{images/pool_accuracy_comparison.png}
-    \caption{Comparazione di accuratezza dei metodi di pooling}
-    \label{pool_accuracy_comparison}
+\centering
+\includegraphics[width=0.8\linewidth]{images/pool_accuracy_comparison.png}
+\caption{Confronto di accuratezza tra i metodi di pooling}
+\label{pool_accuracy_comparison}
 \end{figure}
 
 \begin{figure}
-    \centering
-    \includegraphics[width=0.8\linewidth]{images/pool_loss_comparison.png}
-    \caption{Comparazione della loss dei metodi di pooling}
-    \label{pool_loss_comparison}
+\centering
+\includegraphics[width=0.8\linewidth]{images/pool_loss_comparison.png}
+\caption{Confronto della loss tra i metodi di pooling}
+\label{pool_loss_comparison}
 \end{figure}
 
-I risultati in figura \ref{pool_accuracy_comparison} mostrano come l'average pool raggiunga un'accuratezza migliore rispetto agli altri metodi 
+I risultati mostrati in figura \ref{pool_accuracy_comparison} evidenziano come l'average pooling raggiunga un'accuratezza superiore rispetto agli altri metodi, mantenendosi stabile con l'aumentare delle epoche.
+Applicare il max pooling al primo livello e l'average pooling ai successivi porta a prestazioni simili, seppur leggermente inferiori, rispetto all'uso esclusivo dell'average pooling. Si può quindi affermare sperimentalmente che l'average pooling abbia un impatto maggiore nei livelli intermedi e finali della rete.
+Al contrario, un modello basato esclusivamente su max pooling presenta non solo una perdita (loss) più elevata, ma anche una tendenza all'aumento di essa con l'avanzare delle epoche. Questa comparazione permette inoltre di identificare il numero di epoche più adeguato per l'addestramento del modello: si osserva infatti che, oltre la decima epoca, l'accuratezza tende generalmente a diminuire o stabilizzarsi, mentre la loss ad aumentare.
+
+È bene precisare che i risultati ottenuti non sono assoluti e sono influenzati da diversi fattori: dipendono, infatti, oltre che dal dataset utilizzato, da come vengono inizializzati i pesi e da come sono distribuiti i dati di training e testing. Nel caso specifico, quindi, si preferisce utilizzare una CNN con livelli di average pool.
 
 \subsection{Funzioni di attivazione}
+Le funzioni di attivazione costituiscono una parte fondamentale delle reti neurali, poiché determinano l'uscita di ciascun neurone in base alla combinazione lineare degli ingressi pesati. La loro applicazione introduce non linearità nel modello, consentendo alla rete di apprendere e rappresentare in maniera più efficace relazioni complesse tra dati di input e corrispondenti output, migliorando così la capacità di generalizzazione del sistema.  
+Al contrario, l'utilizzo di sole funzioni lineari ridurrebbe la rete a una semplice trasformazione lineare degli input, priva della possibilità di descrivere legami complessi e non linearmente descrivibili.
+
 \subsubsection{ReLU}
+La funzione di attivazione \textit{ReLU} (Rectified Linear Unit) è ampiamente utilizzata per la sua semplicità ed efficienza.\\
+Essa corrisponde matematicamente alla funzione:
+\begin{gather*}
+    \text{ReLU}(x) = \max (0, x) \\
+    \downarrow \\
+    \text{ReLU}(x) =
+        \begin{cases}
+            0 & \text{ se } \; x\leq 0 \\
+            x & \text{ se } \; x > 0 
+        \end{cases}
+\end{gather*}
+
+ReLU è quindi definita da due funzioni lineari ($y=0$ e $y=x$), rispettivamente per valori negativi e positivi dell'input. Nonostante la sua semplicità, essa introduce non linearità nel modello e permette alla rete di mantenere solo valori positivi, scartando quelli nulli o negativi.  
+Nel contesto delle reti convoluzionali, questa proprietà consente di filtrare i pattern non utili al riconoscimento di una specifica caratteristica.  
+
+ReLU viene utilizzata in tutti i livelli convoluzionali e completamente connessi, fatta eccezione per l'ultimo livello che svolge il ruolo di output.
+
 \subsubsection{Softmax}
-\subsection{Ottimizzatori}
+L'output della rete neurale, che è di classificazione, deve rappresentare una distribuzione di probabilità, così da poter identificare la classe predetta come quella con probabilità più alta. A questo scopo, l'ultimo livello della rete applica comunemente la funzione di attivazione \textit{Softmax}.\\
+In termini concettuali, Softmax calcola una frequenza relativa facendo uso della funzione esponenziale:
+$$
+    \text{Softmax}(x_i) = \frac{\displaystyle e^{\displaystyle x_i}}{\displaystyle \sum_j e^{\displaystyle x_j}}
+$$
+
+L'uso della funzione esponenziale consente di:
+\begin{itemize}
+    \item garantire che la somma delle probabilità sia pari a 1, realizzando una distribuzione valida;
+    \item ottenere valori sempre positivi;
+    \item amplificare le differenze tra i valori $x_i$, evitando probabilità troppo simili tra loro ed enfatizzando la classe più probabile, rendendo così la decisione più netta.
+\end{itemize}
 
 \section{Risultato}
-\subsection{Step intermedi}
+Una rete addestrata come descritto con l'utilizzo di livelli average pool, raggiunge una accuratezza del 99.16096\% nella decima epoca con una loss di 0.04025.
+Sull'intero insieme di test compie 625 errori su 74490 (0.83904 \%) e riesce anche a riconoscere caratteri disegnati dall'utente. Con l'utilizzo del mouse è possibile disegnare un carattere che viene successivamente ridotto a una risoluzione di $28 \times 28$ con un sottocampionamento con interpolazione bilineare e dato in pasto alla rete neurale  per il riconoscimento.
+Considerati il grande numero e la grande varietà di dati con cui è stata addestrata la rete, questa è in grado di riconoscere i caratteri con diversi stili di scrittura e amibguità con un ottimo grado di accuratezza.
 
-\section{Conclusioni}
+\begin{figure}
+\centering
+\includegraphics[width=1\linewidth]{images/drawn_letters_predicted.png}
+\caption{Alcune lettere disegnate a mano riconosciute dalla rete neurale}
+\label{drawn_letters_predicted}
+\end{figure}
+
+\subsection{Step intermedi}
+È possibile visualizzare gli step intermedi del riconoscimento effettuato dalla rete, riuscendo a identificare i pattern estratti più importanti e comprendere meglio il "ragionamento" della rete durante il riconoscimento.
+
 \subsection{Limiti}
+
+%TODO ricorda di parlare di quanto siano poche le 'I', porta a riconoscerle spesso come 'T'
 
 \end{document}
