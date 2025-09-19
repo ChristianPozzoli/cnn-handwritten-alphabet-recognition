@@ -37,6 +37,11 @@ ndkeywordstyle=\bfseries,
 numbers=left
 }
 \maketitle
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{images/canvas.png}
+\end{figure}
+\newpage
 \renewcommand*\contentsname{Indice}
 \tableofcontents
 \newpage
@@ -49,7 +54,7 @@ Nonostante queste difficoltà, la necessità di leggere e interpretare il testo 
 
 \subsection{Obiettivo}
 L'obiettivo del progetto è quella di costruire una rete neurale capace di riconoscere i caratteri scritti a mano.
-È quindi necessario strutturare una rete neurale capace di apprendere da una dataset le caratteristiche delle singole letterecon l'obiettivo di riconoscerle con alta attendibilità anche se di origine esterna all'insieme dei dati utilizzati per l'allenamento.
+È quindi necessario strutturare una rete neurale capace di apprendere da una dataset le caratteristiche delle singole lettere con l'obiettivo di riconoscerle con alta attendibilità anche se di origine esterna all'insieme dei dati utilizzati per l'allenamento.
 Sarà, quindi, sviluppato anche un tool per permettere a un utente di disegnare un carattere da fare riconoscere alla rete neurale costruita.
 
 \subsection{Strumenti}
@@ -57,7 +62,7 @@ Lo sviluppo della rete neurale è realizzato in Python, utilizzando Jupyter Note
 
 Le librerie NumPy e Pandas sono impiegate per la gestione e l'elaborazione efficiente dei dati, mentre Matplotlib supporta la creazione di grafici e visualizzazioni utili all'analisi delle prestazioni del modello.
 La libreria OpenCV è utilizzata per il pre-processamento e la manipolazione delle immagini, operazioni fondamentali per l'addestramento.
-La costruzione e l'addestramento della rete neurale sono realizzati con TensorFlow e Keras come framework principali. Infine, Tkinter permette lo sviluppo di un'interfaccia grafica semplice, attraverso cui l'utente può disegnare un carattere e sottoporlo direttamente al modello per il riconoscimento.
+La costruzione e l'addestramento della rete neurale sono realizzati con TensorFlow e Keras come framework principali. Infine, Tkinter e ipycanvas permettono lo sviluppo di un'interfaccia grafica semplice, attraverso cui l'utente può disegnare un carattere e sottoporlo direttamente al modello per il riconoscimento.
 
 \section{Reti neurali convoluzionali}\label{cnn}
 Con l'obiettivo di sviluppare un agente capace di riconoscere caratteri scritti, ci si confronta con il problema dell'elaborazione di immagini, in quanto il dato da classificare si presenta come una matrice di pixel (in questo caso in scala di grigi).
@@ -67,7 +72,7 @@ Tale operazione, ampiamente utilizzata anche nella teoria dei segnali, consiste 
 Nel caso di un'immagine, la convoluzione viene applicata a ciascun pixel come prodotto scalare tra una matrice, chiamata filtro (o kernel), e la porzione dell'immagine su cui essa si sovrappone (nel deep learning si utilizza spesso una variante chiamata cross-correlation, che evita il passaggio di riflessione).
 Questa operazione permette alla rete neurale di estrarre delle \textit{feature} dall'immagine, in modo da poter riconoscere i contenuti e categorizzare i dati.
 I filtri rappresentano quindi i pesi di un layer convoluzionale e vengono ottimizzati durante l'addestramento per catturare le caratteristiche più utili al compito.
-Solitamente i layer convoluzionali sono intervallati da dei layer di pooling che riducono la dimensione spaziale dell'immagine, aggregando regioni adiacenti (con, ad esempio, logice di media o di massimo). Questa riduzione abbassa il costo computazionale dei livelli successivi, riduce il rischio di overfitting e aumenta il campo recettivo della rete.
+Solitamente i layer convoluzionali sono intervallati da layer di pooling che riducono la dimensione spaziale dell'immagine, aggregando regioni adiacenti (con, ad esempio, logice di media o di massimo). Questa riduzione abbassa il costo computazionale dei livelli successivi, riduce il rischio di overfitting e aumenta il campo recettivo della rete.
 Nei primi livelli vengono individuate \textit{feature} locali e specifiche (bordi, texture), mentre con il pooling e la progressione degli strati la rete impara rappresentazioni sempre più astratte e globali, capaci di riconoscere le strutture e i componenti principali del soggetto nell'immagine.
 
 \section{Implementazione}
@@ -81,7 +86,7 @@ Per addestrare la rete neurale è necessario disporre di una grande quantità di
 Il dataset è in formato CSV ed è composto da 372450 righe (numero di lettere) e da 785 colonne. La prima colonna rappresenta l'etichetta (la posizione della lettera nell'alfabeto), con valori compresi tra 0 e 25; le successive colonne contengono l'elenco dei pixel, cioè un elenco di 784 valori da 0 a 255 che rappresentano un'immagine di dimensione $28\times28$ in scala di grigi.
 Per poter utilizzare questi dati è necessario modificare la loro struttura in memoria in base alle esigenze.
 
-\begin{figure}
+\begin{figure}[H]
     \centering
     \includegraphics[width=1\linewidth]{images/letters_frequency.png}
     \caption{Frequenza delle lettere nel dataset}
@@ -95,6 +100,7 @@ Come prima operazione è utile aggiungere una colonna iniziale che rappresenti i
     \item avere difficoltà nella ricerca di un minimo globale;
     \item dimenticare le prime lettere apprese.
 \end{itemize}
+
 Pertanto, si randomizza prima l'ordine delle righe e successivamente si separano gli indici e le etichette dal dataset vero e proprio.
 Oltre a questa suddivisione in colonne, la fase di addestramento richiede anche una suddivisione in righe, con l'obiettivo di ottenere due insiemi di dati: i dati di training, utilizzati per l'addestramento, e i dati di test, utilizzati come controllo sull'andamento dell'errore per evitare overfitting. Una percentuale comune per questo tipo di suddivisione è 80\% di dati training e 20\% dati di test.
 Per la rappresentazione del dato e l'elaborazione da parte della rete, anziché un singolo vettore, è necessario disporre i dati secondo una matrice $28\times28$.
@@ -102,7 +108,7 @@ Per la rappresentazione del dato e l'elaborazione da parte della rete, anziché 
 Infine, l'output della rete sarà una probabilità, o meglio, un vettore in cui è contenuta la probabilità che il carattere da riconoscere sia quello con l'indice corrispondente alla posizione del dato. Questo tipo di rappresentazione è detta one-hot, il vettore contenente l'etichetta della lettera corrispondente sarà quindi trasformato in un vettore dove ogni elemento è un vettore di zeri con valore 1 all'indice dell'etichetta stessa.
 Con i dati organizzati in questo modo è possibile valutare la struttura della rete e le sue componenti.
 
-\begin{lstlisting}[float, language=Python, caption={Codice per la rappresentazione one-hot}]
+\begin{lstlisting}[language=Python, caption={Codice per la rappresentazione one-hot}]
 train_label_OH = np.zeros(shape=(train_label.shape[0], 26))
 test_label_OH = np.zeros(shape=(test_label.shape[0], 26))
 for idx, n in enumerate(train_label):
@@ -111,7 +117,7 @@ for idx, n in enumerate(test_label):
     test_label_OH[idx, int(n)] = 1
 \end{lstlisting}
 
-\begin{figure}[H]
+\begin{figure}
     \centering
     \includegraphics[width=.85\linewidth]{images/some_letters.png}
     \caption{Visualizzazione di alcune lettere}
@@ -175,14 +181,14 @@ I modelli messi a confronto sono quattro:
 \item Modello con il primo livello di average pooling e i successivi di max pooling
 \end{itemize}
 
-\begin{figure}
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.7\linewidth]{images/pool_accuracy_comparison.png}
 \caption{Confronto di accuratezza tra i metodi di pooling}
 \label{pool_accuracy_comparison}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.7\linewidth]{images/pool_loss_comparison.png}
 \caption{Confronto della loss tra i metodi di pooling}
@@ -286,6 +292,35 @@ Soprattutto nei primi livelli è evidente come la rete si focalizzi sui contorni
 
 \subsection{Limiti}
 
-%TODO ricorda di parlare di quanto siano poche le 'I', porta a riconoscerle spesso come 'T'
+\begin{figure}
+\centering
+\includegraphics[width=.6\linewidth]{images/drawn_letters_wrong_prediction.png}
+\caption{Alcune lettere disegnate a mano non riconosciute correttamente}
+\label{letters_wrong_prediction}
+\end{figure}
+
+Come discusso, la rete risultante ha buone capacità di riconoscimento dei caratteri, ma presenta comunque delle criticità e dei limiti che sono legati alla struttura della rete o addirittura al bilanciamento del dataset.
+Come si può notare in figura \ref{letters_wrong_prediction}, la rete sbaglia in situazione non ordinarie o non rappresentate dal dataset utilizzato.
+
+\subsubsection{Lettera I}
+Nel caso 1 e 7, è evidente che la rete è in difficoltà nel riconoscimento delle I. Questo è dato in parte dalla particolarità del carattere che è rappresentato (talvolta) da un singolo segno verticale, che è una feature estratta da molti altri caratteri, quindi la rete ha molte lettere con cui confrontare il pattern. Proprio in questo risiede il secondo problema, l'addestramento è effettuato su un piccolo numero di \textit{sample} di I, come si può notare dal grafico di distribuzione delle lettere in figura \ref{letters_frequency}.
+La rete, alla presenza di una feature di un pattern verticale, sarà quindi portata più probabilmente a riconoscere quella stessa feature appartenente a un carattere più frequente nel dataset. La scelta di mantenere un numero basso di I, però, è proprio giustificata dalla particolarità grafica della lettera che potrebbe penalizzare il riconoscimento di altri caratteri.
+
+\subsubsection{Disposizione spaziale}
+La disposizione nello spazio è importante per definire il carattere che si sta riconoscendo, perché è fondamentale per la rete nurale che i caratteri non siano ribaltati, ruotati o specchiati. I casi presi in considerazione per l'addestramento della rete non prendono in considerazione questo tipo di problematica, se non per i singoli tratti che compongono un simbolo che, spesso, sono incerti, non lineari, spessi o sottili. Quest'ultima è un'ottima caratteristica del dataset, in quanto simula la scrittura manuale. Il problema, infatti, è che la rete neurale non riesce ad indentificare l'orientamento del carattere, ma parte dal presupposto che il carattere sia già orientato nella maniera corretta. %L'operazione di convoluzione non è invariante per rotazioni e scale, quindi se l'input .
+Per estendere le sue capacità, si potrebbe agire direttamente sul dataset, aggiungendo un modulo di elborazione delle immagini appena prima dell'input di addestramento della rete: un modulo prende in input l'immagine originale e la distorce in maniera casuale applicando effetti come traslazione, \textit{shear} o scala. Questo tipo  di approccio sarebbe efficace su minime distorsioni e alcuni casi particolari, renderebbe la rete più robusta, ma senza ampliare di troppo le abilità attuali e senza aggiungere abilità di rotazione.
+Infatti, per ottenere un ulteriore potenziamento nelle capacità della rete è necessario modificarne la struttura e renderla abile nel riconoscimento dell'orientamento dell'immagine: la rete non deve, quindi, imparare a riconoscere i caratteri distorti, ma a distorcerli lei stessa per riconoscerli.
+È possibile aggiungere degli ulteriori livelli iniziali pensati per effettuare trasformazioni come scala, \textit{shear} e rotazione, che non agiscono sul dataset, ma su come la rete lo elabora, aggiungendo capacità di ruotare, specchiare o scalare un carattere durante il riconoscimento.
+Questi livelli agiscono, quindi, come rete neurale a sè stante che prende il nome di STN (\textit{Spatial Transform Network}), e che ha l'obiettivo di definire dei parametri affini da utilizzare nelle trasformazioni sull'input che sarà successivamente elaborato dalla struttura convoluzinale discussa fino ad ora.
+La struttura, come mostrato in figura \ref{stn_structure}, utilizza dei livelli convolutivi o completamente connessi con una successiva operazione di regressione, per determinare i parametri affini necessari per trasformare l'input, questi parametri vengono poi utilizzati dal \textit{sampler} per recuperare il valore di un pixel dall'immagine originale e applicare la trasformazione affine.
+
+Con questa soluzione la rete ottiene una struttura più complessa, ma più evoluta, risolvendo il problema della distorsione, rotazione o scala applicato all'input.
+
+\begin{figure}
+\centering
+\includegraphics[width=1\linewidth]{images/stn.png}
+\caption{Struttura di una STN}
+\label{stn_structure}
+\end{figure}
 
 \end{document}
