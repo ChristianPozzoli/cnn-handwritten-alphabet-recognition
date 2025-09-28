@@ -166,7 +166,7 @@ Il secondo livello, con 64 filtri, opera su un'immagine a risoluzione ridotta a 
 Infine, il terzo livello porta il numero di filtri a 128, operando su una rappresentazione ulteriormente ridotta e focalizzandosi su caratteristiche di alto livello, come forme, parti di oggetti o strutture astratte.
 Questa progressione è un principio chiave delle reti convoluzionali, poiché consente di mantenere un bilanciamento tra costo computazionale e capacità di rappresentazione.
 
-\subsubsection{Pooling}
+\subsubsection{Pooling} \label{pooling}
 Come descritto in precedenza, il pooling è un'operazione che aggrega una regione di pixel in una regione più piccola ed equivale a un'operazione di sottocampionamento. Solitamente le regioni considerate hanno dimensioni $2 \times 2$ e vengono fatte scorrere sull'immagine con stride pari a 2, in modo da valutare ciascun pixel una sola volta. In questo modo, a ogni livello di pooling la risoluzione degli input viene dimezzata.
 
 L'aggregazione delle regioni può avvenire secondo logiche diverse: i 4 pixel possono essere combinati prendendo il valore massimo (max pooling) oppure calcolandone la media (average pooling). I risultati differiscono leggermente: il max pooling tende a enfatizzare le \textit{feature} più marcate e significative, mentre l'average pooling produce rappresentazioni più morbide e diffuse, utili per il riconoscimento di pattern meno netti.
@@ -237,9 +237,19 @@ L'uso della funzione esponenziale consente di:
     \item amplificare le differenze tra i valori $x_i$, evitando probabilità troppo simili tra loro ed enfatizzando la classe più probabile, rendendo così la decisione più netta.
 \end{itemize}
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{images/confusion_matrix.png}
+    \caption{Matrice di confusione}
+    \label{confusion_matrix}
+\end{figure}
+
+\newpage
+
 \section{Risultati}
-Una rete addestrata come descritto, utilizzando livelli di \textit{average pooling}, raggiunge un'accuratezza del 99.16096\% alla decima epoca, con una \textit{loss} pari a 0.04025.  
-Sull'intero insieme di test commette 625 errori su 74490 campioni (0.83904\%) ed è inoltre in grado di riconoscere caratteri disegnati direttamente dall'utente. Attraverso l'utilizzo del mouse, è infatti possibile disegnare un carattere che viene successivamente ridimensionato a una risoluzione di $28 \times 28$ tramite sottocampionamento con interpolazione bilineare e fornito come input alla rete neurale per il riconoscimento.
+
+Una rete addestrata come descritto, utilizzando livelli di \textit{average pooling}, raggiunge un'accuratezza del 99.16096\% alla decima epoca, con una \textit{loss} pari a 0.04025. 
+Come è possibile vedere dalla matrice di confusione della figura \ref{confusion_matrix}, sull'intero insieme di test commette 625 errori su 74490 campioni (0.83904\%) ed è inoltre in grado di riconoscere caratteri disegnati direttamente dall'utente. Attraverso l'utilizzo del mouse, è infatti possibile disegnare un carattere che viene successivamente ridimensionato a una risoluzione di $28 \times 28$ tramite sottocampionamento con interpolazione bilineare e fornito come input alla rete neurale per il riconoscimento.
 Grazie all'elevato numero e alla varietà dei dati di addestramento, la rete riesce a riconoscere caratteri scritti con diversi stili, gestendo anche ambiguità con un alto grado di accuratezza.  
 Come si osserva in figura \ref{drawn_letters_predicted}, la rete mantiene buone prestazioni anche su lettere decentrate, ambigue o con tratti aperti e non ben definiti.
 
@@ -306,7 +316,26 @@ Come si può notare in figura \ref{letters_wrong_prediction}, la rete sbaglia in
 Nel caso 1 e 7, è evidente che la rete è in difficoltà nel riconoscimento delle I. Questo è dato in parte dalla particolarità del carattere che è rappresentato (talvolta) da un singolo segno verticale, che è una feature estratta da molti altri caratteri, quindi la rete ha molte lettere con cui confrontare il pattern. Proprio in questo risiede il secondo problema, l'addestramento è effettuato su un piccolo numero di \textit{sample} di I, come si può notare dal grafico di distribuzione delle lettere in figura \ref{letters_frequency}.
 La rete, alla presenza di una feature di un pattern verticale, sarà quindi portata più probabilmente a riconoscere quella stessa feature appartenente a un carattere più frequente nel dataset. La scelta di mantenere un numero basso di I, però, è proprio giustificata dalla particolarità grafica della lettera che potrebbe penalizzare il riconoscimento di altri caratteri.
 
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.9\linewidth]{images/wrong_critic.png}
+\caption{Alcuni riconoscimenti sbagliati dal modello solo average pooling sul set critico costruito. Tra parentesi quadre il carattere corretto}
+\label{wrong_critic}
+\end{figure}
+
+\subsubsection{Set critico}
+Nel corso di vari addestramenti e nella comparazione dei metodi di pooling (capitolo \ref{pooling}) è stato possibile raccogliere dal dataset un insieme di 3847 campioni critici, cioè caratteri che mettono in difficoltà il modello e che lo inducono all'errore, soprattutto se addestrato con un basso numero di epoche. Il set critico è stato costruito raccogliendo empiricamente gli indici dei caratteri non riconosciuti correttamente da almeno un modello in una delle fasi di addestramento nel tentativo di analizzare i motivi di eventuali errori della rete e testarne il miglioramento nel corso dello sviluppo. Dunque, gli errori commessi variano da addestramento ad addestramento e dipendono anche dalla divisione del set di train e di test (effettuata casualmente). Tra i modelli di pooling, quelli che commettono meno errori sul set critico sono il modello solo average pooling e il modello average poi max pooling, rispettivamente 31 e 42 errori su tutto il dataset critico, mentre per il modello solo max pooling e il modello max poi average rispettivamente 44 e 56, a conferma di quanto discusso nel capitolo \ref{pooling}.
+I risultati specifici riportati, quindi, delineano un buon comportamento della rete, indipendentemente dalla tecnica di pooling utilizzata, con una percentuale di errore tra $0.81\%$ e $1.46\%$. È comunque interessante analizzare i motivi delle difficoltà della rete nel riconoscimento di questi caratteri.
+
+Molti degli errori commessi dai modelli sono in comune e delineano delle difficoltà della rete a riconoscere alcuni pattern incerti e meno definiti. Nella figura \ref{wrong_critic} è rappresentata una buona parte del set critico ed è possibile identificare chiaramente alcuni caratteri che sono difficili da interpretare anche per un umano, come ad esempio la figura 14 (lettera U) che potrebbe essere confusa da un occhio umano con una lettera E minuscola (nonostante le lettere minuscole non facciano parte dello studio in questione, quindi non possono venire riconosciute dalla rete). Lo stile di scrittura, diverso dal maiuscolo, è infatti un fattore importante di errore, come si può vedere negli esempi 0, 3, 9 e 13 che rappresentano delle lettere in corsivo o in minuscolo e che, quindi, possono essere considerati elementi di eccezione rispetto al dataset di addestramento, da considerarsi come un rumore sui dati.
+L'esempio 11 (lettera B riconosciuta come Y) è, invece, da considerarsi un errore dovuto alla poca chiarezza e leggibilità del carattere, in quanto la porzione superiore della lettera è tratteggiata e accennata, e induce la rete neurale a perdere l'informazione relativa a quel tratto.
+Più in generale gli altri errori sono dovuti a tratti poco omogenei che definiscono un carattere con alcuni tratti lunghi e altri corti nel corso della scrittura dello stesso carattere, che possono indurre la rete a confonderli con il pattern di altre lettere (esempio 10 e 15) e disposizioni spaziali particolari come i caratteri 5 e 18 come si discute nel capitolo \ref{disposizione_spaziale}.
+
+Nonostante questi caratteri singolarmente mettano in difficoltà la rete neurale, rappresentano comunque una componente importante nell'apprendimento della stessa, in quanto permettono un addestramento più variegato e dinamico, e (se presenti nel set di addestramento) contribuiscono, come il resto del dataset, alla definizione dei pesi che permettono alla rete di riconoscere i pattern anche se non definiti in maniera precisa o convenzionale. La presenza di questi caratteri, seppur apparentemente trascurabili a livello individuale, è positiva e contribuisce al perfezionamento del riconoscimento dei caratteri scritti a mano.
+
 \subsubsection{Disposizione spaziale}
+\label{disposizione_spaziale}
 La disposizione nello spazio è importante per definire il carattere che si sta riconoscendo, perché è fondamentale per la rete nurale che i caratteri non siano ribaltati, ruotati o specchiati. I casi presi in considerazione per l'addestramento della rete non prendono in considerazione questo tipo di problematica, se non per i singoli tratti che compongono un simbolo che, spesso, sono incerti, non lineari, spessi o sottili. Quest'ultima è un'ottima caratteristica del dataset, in quanto simula la scrittura manuale. Il problema, infatti, è che la rete neurale non riesce ad indentificare l'orientamento del carattere, ma parte dal presupposto che il carattere sia già orientato nella maniera corretta. %L'operazione di convoluzione non è invariante per rotazioni e scale, quindi se l'input .
 Per estendere le sue capacità, si potrebbe agire direttamente sul dataset, aggiungendo un modulo di elborazione delle immagini appena prima dell'input di addestramento della rete: un modulo prende in input l'immagine originale e la distorce in maniera casuale applicando effetti come traslazione, \textit{shear} o scala. Questo tipo  di approccio sarebbe efficace su minime distorsioni e alcuni casi particolari, renderebbe la rete più robusta, ma senza ampliare di troppo le abilità attuali e senza aggiungere abilità di rotazione.
 Infatti, per ottenere un ulteriore potenziamento nelle capacità della rete è necessario modificarne la struttura e renderla abile nel riconoscimento dell'orientamento dell'immagine: la rete non deve, quindi, imparare a riconoscere i caratteri distorti, ma a distorcerli lei stessa per riconoscerli.
